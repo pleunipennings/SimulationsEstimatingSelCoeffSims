@@ -65,17 +65,18 @@ void popAdapt(gsl_rng *rng){
 			cout  << t*output_every_Xgen << "\t" << pi << "\t" << freq<< "\n";} 
 		
 		for (int t2 = 0; t2<(output_every_Xgen); t2++){//each loop is 1 gen
-			//mutation
-			mut_from_wt = gsl_ran_binomial(rng, mu, NumWildtype); 
-			wt_from_mut = gsl_ran_binomial(rng, mu, NumMutants); 
-			NumMutants+=(mut_from_wt-wt_from_mut); 
-			NumWildtype-=(mut_from_wt-wt_from_mut); 
+			//I am going to change the order. New order: selection & inheritence before mutation
 			//inherit
 			freq = double(NumMutants)/double(NUMINDS); //I think that this is the frequency I should output!
 			MeanFitness = 1-(freq*cost);
 			expectedfreq = (freq * (1-cost)) / MeanFitness;
 			NumMutants = gsl_ran_binomial(rng, expectedfreq, NUMINDS); 
-			NumWildtype = NUMINDS - NumMutants; 
+			NumWildtype = NUMINDS - NumMutants;
+			//mutation
+			mut_from_wt = gsl_ran_binomial(rng, mu, NumWildtype);
+			wt_from_mut = gsl_ran_binomial(rng, mu, NumMutants);
+			NumMutants+=(mut_from_wt-wt_from_mut);
+			NumWildtype-=(mut_from_wt-wt_from_mut);
 		}
 	}
 }
