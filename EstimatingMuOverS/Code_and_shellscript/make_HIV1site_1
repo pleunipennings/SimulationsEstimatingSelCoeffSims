@@ -1,0 +1,1 @@
+g++ -o /Users/pleuni/Dropbox/SimulationsEstimatingSelCoeffSims/EstimatingMuOverS/Code_and_shellscript/HIVevolution_HIV1site /Users/pleuni/Dropbox/SimulationsEstimatingSelCoeffSims/EstimatingMuOverS/Code_and_shellscript/HIVevolution_HIV1site.cpp -lgsl -lm -lgslcblas 
