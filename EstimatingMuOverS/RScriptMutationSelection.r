@@ -50,10 +50,41 @@ for (i in 1:length(ListFiles)){
     #read the file
     ListMeanFreqs[i]<-mean(read.csv(paste("../Data/",ListFiles[i],sep=""),sep = "\t")$freq)
 }
+plot(ListCosts,mu/ListMeanFreqs)
+print(cor.test(ListCosts,mu/ListMeanFreqs))
+#> plot(ListCosts,mu/ListMeanFreqs,ylim=c(0,1))
+#> plot(ListCosts,mu/ListMeanFreqs,ylim=c(0,2))
+#> plot(ListCosts,ListMeanFreqs,ylim=c(0,1))
+#> plot(ListCosts,ListMeanFreqs,log="y")
 
-###Hm, it looks like the very deleterious mutations have way too low frequencies. 
-###I need to check how i did the simulations
-###Also create a github repository. 
+###Hm, it looks like the very deleterious mutations have way too low frequencies. Fixed. 
+###I need to check how i did the simulations SWAPPED ORDER OF MUTATION AND SELECTION. Now I sample after mutation, but before selection. 
+###Also create a github repository. DONE
+
+#####Looking at smaller number of patients. 
+
+CorList<-c()
+NumPatsList<-c(1,5,seq(10,200,by=20))   
+for (Numpats in NumPatsList){
+    ListCosts<-rep(0,length(ListFiles))
+    ListMeanFreqs<-rep(0,length(ListFiles))
+    Pats<-sample(200,Numpats)
+    for (i in 1:length(ListFiles)){
+     ListCosts[i]<-as.numeric(substr(ListFiles[i], regexpr("cost",ListFiles[i])[1]+5, regexpr(".txt",ListFiles[i])[1]+-1))
+    #read the file
+     ListMeanFreqs[i]<-mean(read.csv(paste("../Data/",ListFiles[i],sep=""),sep = "\t")$freq[Pats])
+    }
+plot(ListCosts,mu/ListMeanFreqs,main=paste("Numpats",Numpats),ylim=c(0,1))
+Cor=round(cor.test(ListCosts,mu/ListMeanFreqs)$estimate,3)
+text(0.6,0.2,paste("cor = ", Cor))
+print(paste("numpats",Numpats,"cor",Cor))
+CorList<-c(CorList,Cor)
+}
+
+plot(NumPatsList,CorList)
+
+###Next: what if sequencing less precise! 
+
 
 #####Old code from 2014, I don't think I need this. 
 if (FALSE){
@@ -95,3 +126,4 @@ for (num_seqs_per_patient in diffnumseqs){
 dev.off()
 }
 #rbinom(n, size, prob)
+
