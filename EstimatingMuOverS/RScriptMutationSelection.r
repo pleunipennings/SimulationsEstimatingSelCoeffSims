@@ -8,7 +8,8 @@ system("./Code_and_shellscript/make_HIV1site")    #compile the code
 Ne = 10000 #currently Ne cannot be changed in the sims 
 nmax = 200 #(max num of patients, should be around 200)
 NUMRUNS=1; numoutputs=nmax
-theta = 10
+thetas = c(0.1,1)
+for (theta in thetas){
 mu = theta / Ne
 numsites = 300
 costs = sort(round(runif(numsites),2))
@@ -40,18 +41,19 @@ system("chmod 775 ./Code_and_shellscript/tempscript.sh")
 #Run tempscript.sh
 system("./Code_and_shellscript/tempscript.sh")
 }
-
-##########Read data
-ListFiles<-list.files("../Data/")
-ListCosts<-rep(0,length(ListFiles))
-ListMeanFreqs<-rep(0,length(ListFiles))
-for (i in 1:length(ListFiles)){
-    ListCosts[i]<-as.numeric(substr(ListFiles[i], regexpr("cost",ListFiles[i])[1]+5, regexpr(".txt",ListFiles[i])[1]+-1))
-    #read the file
-    ListMeanFreqs[i]<-mean(read.csv(paste("../Data/",ListFiles[i],sep=""),sep = "\t")$freq)
 }
-plot(ListCosts,mu/ListMeanFreqs)
-print(cor.test(ListCosts,mu/ListMeanFreqs))
+##########Read data
+
+#ListFiles<-list.files("../Data/")
+#ListCosts<-rep(0,length(ListFiles))
+#ListMeanFreqs<-rep(0,length(ListFiles))
+#for (i in 1:length(ListFiles)){
+#    ListCosts[i]<-as.numeric(substr(ListFiles[i], regexpr("cost",ListFiles[i])[1]+5, regexpr(".txt",ListFiles[i])[1]+-1))
+    #read the file
+#    ListMeanFreqs[i]<-mean(read.csv(paste("../Data/",ListFiles[i],sep=""),sep = "\t")$freq)
+#}
+#plot(ListCosts,mu/ListMeanFreqs)
+#print(cor.test(ListCosts,mu/ListMeanFreqs))
 #> plot(ListCosts,mu/ListMeanFreqs,ylim=c(0,1))
 #> plot(ListCosts,mu/ListMeanFreqs,ylim=c(0,2))
 #> plot(ListCosts,ListMeanFreqs,ylim=c(0,1))
@@ -62,28 +64,39 @@ print(cor.test(ListCosts,mu/ListMeanFreqs))
 ###Also create a github repository. DONE
 
 #####Looking at smaller number of patients. 
+ListFiles<-list.files("../Data/")
+NumPatsList<-c(1,2,3,5,7,seq(10,200,by=20))   
 
-CorList<-c()
-NumPatsList<-c(1,5,seq(10,200,by=20))   
-for (Numpats in NumPatsList){
-    ListCosts<-rep(0,length(ListFiles))
-    ListMeanFreqs<-rep(0,length(ListFiles))
-    Pats<-sample(200,Numpats)
-    for (i in 1:length(ListFiles)){
-     ListCosts[i]<-as.numeric(substr(ListFiles[i], regexpr("cost",ListFiles[i])[1]+5, regexpr(".txt",ListFiles[i])[1]+-1))
-    #read the file
-     ListMeanFreqs[i]<-mean(read.csv(paste("../Data/",ListFiles[i],sep=""),sep = "\t")$freq[Pats])
+CorData<-data.frame("Numpats"=as.numeric(),"Theta"=as.numeric(),"CorCoeff"=as.numeric())
+
+for (theta in thetas){
+    thetapattern=paste("T_",theta,"_",sep="")
+    ListFilesTheta<-ListFiles[grep(thetapattern,ListFiles)]
+    for (Numpats in NumPatsList){
+        ListCosts<-rep(0,length(ListFilesTheta))
+        ListMeanFreqs<-rep(0,length(ListFilesTheta))
+        Pats<-sample(200,Numpats)
+        for (i in 1:length(ListFilesTheta)){
+            ListCosts[i]<-as.numeric(substr(ListFilesTheta[i], regexpr("cost",ListFilesTheta[i])[1]+5, regexpr(".txt",ListFilesTheta[i])[1]+-1))
+            #read the file
+            ListMeanFreqs[i]<-mean(read.csv(paste("../Data/",ListFilesTheta[i],sep=""),sep = "\t")$freq[Pats])
+        }
+        #plot(ListCosts,mu/ListMeanFreqs,main=paste("Numpats",Numpats),ylim=c(0,1))
+        CorData[nrow(CorData)+1,]<-c(Numpats,theta,round(cor.test(ListCosts,mu/ListMeanFreqs)$estimate,3))
+        #text(0.6,0.2,paste("cor = ", Cor))
+        print(paste("theta",theta,"numpats",Numpats,"cor",Cor))
+        #CorList<-c(CorList,Cor)
     }
-plot(ListCosts,mu/ListMeanFreqs,main=paste("Numpats",Numpats),ylim=c(0,1))
-Cor=round(cor.test(ListCosts,mu/ListMeanFreqs)$estimate,3)
-text(0.6,0.2,paste("cor = ", Cor))
-print(paste("numpats",Numpats,"cor",Cor))
-CorList<-c(CorList,Cor)
 }
 
-plot(NumPatsList,CorList)
+plot(NumPatsList,CorList,t="b",log="x")
+
+#Ran with diff thetas
+
+###What if freq = 0 , then m/0 give NaN. Should be cost = 1. 
 
 ###Next: what if sequencing less precise! 
+
 
 
 #####Old code from 2014, I don't think I need this. 
