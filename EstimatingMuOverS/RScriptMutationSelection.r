@@ -63,6 +63,12 @@ system("./Code_and_shellscript/tempscript.sh")
 ###I need to check how i did the simulations SWAPPED ORDER OF MUTATION AND SELECTION. Now I sample after mutation, but before selection. 
 ###Also create a github repository. DONE
 
+#####function to go from mu/meanfreq to estimated s (including case where meanfreq = 0)
+EstimatedS <- function(mu, listmeanfreqs){
+    if (meanfreq == 0) return (1)
+    else return (mu/meanfreq)
+}
+
 #####Looking at smaller number of patients. 
 ListFiles<-list.files("../Data/")
 NumPatsList<-c(1,2,3,5,7,seq(10,200,by=20))   
@@ -82,12 +88,19 @@ for (theta in thetas){
             ListMeanFreqs[i]<-mean(read.csv(paste("../Data/",ListFilesTheta[i],sep=""),sep = "\t")$freq[Pats])
         }
         #plot(ListCosts,mu/ListMeanFreqs,main=paste("Numpats",Numpats),ylim=c(0,1))
-        CorData[nrow(CorData)+1,]<-c(Numpats,theta,round(cor.test(ListCosts,mu/ListMeanFreqs)$estimate,3))
+        CorData[nrow(CorData)+1,]<-c(Numpats,theta,round(cor.test(ListCosts,sapply(ListMeanFreqs,function(x) EstimatedS(mu,x)))$estimate,3))
         #text(0.6,0.2,paste("cor = ", Cor))
-        print(paste("theta",theta,"numpats",Numpats,"cor",Cor))
+        print(paste("theta",theta,"numpats",Numpats,"cor",CorData$CorCoeff[nrow(CorData)]))
         #CorList<-c(CorList,Cor)
     }
 }
+
+ggplot(CorData, aes(x = Numpats, y = CorCoeff, colour = "Theta")) +
+    geom_line()
+
+ggplot(data=test_data_long,
+       aes(x=date, y=value, colour=variable)) +
+    geom_line()
 
 plot(NumPatsList,CorList,t="b",log="x")
 
@@ -96,7 +109,6 @@ plot(NumPatsList,CorList,t="b",log="x")
 ###What if freq = 0 , then m/0 give NaN. Should be cost = 1. 
 
 ###Next: what if sequencing less precise! 
-
 
 
 #####Old code from 2014, I don't think I need this. 
