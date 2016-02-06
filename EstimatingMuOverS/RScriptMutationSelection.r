@@ -70,6 +70,7 @@ EstimatedS <- function(mu, listmeanfreqs){
 }
 
 #####Looking at smaller number of patients. 
+thetas<-c(thetas,10)
 ListFiles<-list.files("../Data/")
 NumPatsList<-c(1,2,3,5,7,seq(10,200,by=20))   
 
@@ -95,20 +96,51 @@ for (theta in thetas){
     }
 }
 
-ggplot(CorData, aes(x = Numpats, y = CorCoeff, colour = "Theta")) +
-    geom_line()
+CorData$Theta<-as.factor(CorData$Theta)
 
-ggplot(data=test_data_long,
-       aes(x=date, y=value, colour=variable)) +
-    geom_line()
-
-plot(NumPatsList,CorList,t="b",log="x")
+p <- ggplot(CorData, aes(Numpats, CorCoeff, colour = Theta))
+p + geom_line() +geom_point
 
 #Ran with diff thetas
+###What if freq = 0 , then m/0 give NaN. Should be cost = 1. DONE
 
-###What if freq = 0 , then m/0 give NaN. Should be cost = 1. 
 
 ###Next: what if sequencing less precise! 
+thetas<-c(thetas,10)
+ListFiles<-list.files("../Data/")
+NumPatsList<-c(1,2,3,5,7,seq(10,200,by=20))   
+SampleDepths = c(20,100,1000,10000)
+
+CorDataSampleDepth<-data.frame("Numpats"=as.numeric(),"Theta"=as.numeric(),"CorCoeff"=as.numeric(), SampleDepth = as.numeric())
+
+for (theta in thetas){
+    thetapattern=paste("T_",theta,"_",sep="")
+    ListFilesTheta<-ListFiles[grep(thetapattern,ListFiles)]
+    for (Numpats in NumPatsList){
+        ListCosts<-rep(0,length(ListFilesTheta))
+        ListMeanFreqs<-rep(0,length(ListFilesTheta))
+        Pats<-sample(200,Numpats)
+        for (SampleDepth in SampleDepths){
+            for (i in 1:length(ListFilesTheta)){
+                ListCosts[i]<-as.numeric(substr(ListFilesTheta[i], regexpr("cost",ListFilesTheta[i])[1]+5, regexpr(".txt",ListFilesTheta[i])[1]+-1))
+                #read the file
+                PopFreqs<-read.csv(paste("../Data/",ListFilesTheta[i],sep=""),sep = "\t")$freq[Pats]
+                SampleFreqs
+                ListMeanFreqs[i]<-mean(read.csv(paste("../Data/",ListFilesTheta[i],sep=""),sep = "\t")$freq[Pats])
+                
+                }
+            ListSampleFreqs<-rbinom(length(ListMeanFreqs),SampleDepth,ListMeanFreqs) 
+            }
+        }
+        CorData[nrow(CorData)+1,]<-c(Numpats,theta,round(cor.test(ListCosts,sapply(ListSampleFreqs,function(x) EstimatedS(mu,x)))$estimate,3))
+        print(paste("theta",theta,"numpats",Numpats,"cor",CorData$CorCoeff[nrow(CorData)]))
+    }
+}
+
+CorData$Theta<-as.factor(CorData$Theta)
+
+p <- ggplot(CorData, aes(Numpats, CorCoeff, colour = Theta))
+p + geom_line() +geom_point
 
 
 #####Old code from 2014, I don't think I need this. 
